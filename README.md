@@ -84,14 +84,29 @@ without TLS and authentication in front of it.
 
 ## Packaged builds
 
+Run these from the repository root, and run `pnpm install` first — it links the
+`tools-pack` binary into `node_modules/.bin` and compiles the tools it depends
+on. Without it the command does not exist and pnpm reports
+`Command "tools-pack" not found`.
+
 ```bash
-pnpm tools-pack mac build --to all
-pnpm tools-pack win build --to nsis
-pnpm tools-pack linux build --to appimage
+pnpm install                                  # once, and after pulling changes
+pnpm tools-pack mac build --to all            # .app + .dmg + .zip — macOS only
+pnpm tools-pack win build --to nsis           # .exe installer — Windows only
+pnpm tools-pack linux build --to appimage     # Linux host
+pnpm tools-pack linux build --containerized   # Linux image from any host
 ```
 
-Packaged apps install as `AIWP Design` (with `AIWP Design Beta` /
-`Prerelease` / `Preview` on the non-stable channels).
+There is no cross-compiling: a macOS bundle must be built on macOS and a
+Windows installer on Windows. Only the Linux target can be produced from
+another host, via `--containerized`.
+
+Artifacts land in `.tmp/tools-pack/out/<platform>/namespaces/<namespace>/`, and
+install as `AIWP Design` (with `AIWP Design Beta` / `Prerelease` / `Preview` on
+the non-stable channels).
+
+If a build stops with `dist build metadata hash mismatch`, the tool's compiled
+output is stale against its source — run `pnpm bootstrap` and retry.
 
 ## Contributing
 
