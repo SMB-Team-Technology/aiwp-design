@@ -105,12 +105,20 @@ on. Without it the command does not exist and pnpm reports
 `Command "tools-pack" not found`.
 
 ```bash
-pnpm install                                  # once, and after pulling changes
-pnpm tools-pack mac build --to all            # .app + .dmg + .zip — macOS only
-pnpm tools-pack win build --to nsis           # .exe installer — Windows only
-pnpm tools-pack linux build --to appimage     # Linux host
-pnpm tools-pack linux build --containerized   # Linux image from any host
+pnpm install                                             # once, and after pulling changes
+pnpm tools-pack mac build --to all --portable            # .app + .dmg + .zip — macOS only
+pnpm tools-pack win build --to nsis --portable           # .exe installer — Windows only
+pnpm tools-pack linux build --to appimage --portable     # Linux host
+pnpm tools-pack linux build --containerized              # Linux image from any host
 ```
+
+**Pass `--portable` for any build that leaves your machine.** Without it,
+tools-pack bakes this checkout's runtime root — an absolute path under
+`.tmp/tools-pack/runtime/` — into the packaged config, and it also seeds the
+app with your local `.od/app-config.json`. Such a build works where it was
+made and silently misbehaves anywhere else, including after you move the
+`.app`. A portable build stores its data under the OS per-user location
+instead.
 
 There is no cross-compiling: a macOS bundle must be built on macOS and a
 Windows installer on Windows. Only the Linux target can be produced from

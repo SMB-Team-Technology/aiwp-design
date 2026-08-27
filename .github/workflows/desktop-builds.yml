@@ -80,8 +80,13 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # --portable is mandatory for anything that leaves this runner. Without
+      # it tools-pack bakes the build machine's own runtime root (an absolute
+      # path under .tmp/tools-pack/runtime/...) into the packaged config, and
+      # the app then looks for its data directory at a path that exists only
+      # here. Portable builds fall back to Electron's per-machine userData.
       - name: Build ${{ matrix.platform }} bundle
-        run: pnpm tools-pack ${{ matrix.platform }} build --to ${{ matrix.format }}
+        run: pnpm tools-pack ${{ matrix.platform }} build --to ${{ matrix.format }} --portable
 
       # Bundle filenames carry the namespace token, so normalize to a stable
       # asset name before upload — the release URLs must not move between runs.
