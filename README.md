@@ -8,6 +8,15 @@
 want, and the agent builds prototypes, decks, design systems, images, and video —
 streamed into a live preview you can keep editing.</p>
 
+<p align="center">
+  <a href="https://github.com/SMB-Team-Technology/aiwp-design/actions/workflows/docker-image.yml">
+    <img src="https://github.com/SMB-Team-Technology/aiwp-design/actions/workflows/docker-image.yml/badge.svg?branch=main" alt="Docker image build status" />
+  </a>
+  <a href="https://github.com/orgs/SMB-Team-Technology/packages/container/package/aiwp-design">
+    <img src="https://img.shields.io/badge/ghcr.io-aiwp--design%3Amain-0B2C4D?logo=docker&logoColor=white" alt="Latest container image on GHCR" />
+  </a>
+</p>
+
 ---
 
 ## What this is
@@ -43,6 +52,35 @@ namespaces, and log paths. See `QUICKSTART.md` for the longer walkthrough and
 `AGENTS.md` for the repository map.
 
 On first launch, open **Settings → API key** and paste an Anthropic API key.
+
+## Running the container
+
+Every push to `main` builds a multi-arch image and publishes it to GitHub
+Container Registry. **[Browse the published images →](https://github.com/orgs/SMB-Team-Technology/packages/container/package/aiwp-design)**
+
+| Tag | What it is |
+| --- | --- |
+| `:main` | Head of `main`, moves on every merge |
+| `:main-sha-<short>` | Immutable pin for a specific commit |
+| `:X.Y.Z` / `:latest` | Tagged releases (`v*.*.*`) only |
+
+```bash
+docker pull ghcr.io/smb-team-technology/aiwp-design:main
+```
+
+To run it, use the Compose file, which sets the ports, volume, and health check
+for you:
+
+```bash
+cd deploy
+cp .env.example .env          # set OD_API_TOKEN to a generated secret
+OPEN_DESIGN_IMAGE=ghcr.io/smb-team-technology/aiwp-design:main \
+  docker compose up -d --no-build
+```
+
+Then open <http://127.0.0.1:7456>. See `deploy/README.md` for reverse-proxy,
+CORS, and auth options — and do not put the daemon on a public interface
+without TLS and authentication in front of it.
 
 ## Packaged builds
 

@@ -3,6 +3,7 @@ name: Docker image
 # Standalone Docker packaging line (not part of core merge validation in ci.yml).
 #
 # - pull_request / workflow_dispatch: smoke build only (push: false, amd64)
+# - push to main: multi-arch build + push to ghcr.io as :main and :main-sha-<short>
 # - tag v*.*.* / workflow_call from release: multi-arch build + push to ghcr.io
 
 on:
@@ -24,6 +25,7 @@ on:
         type: boolean
         default: false
   push:
+    branches: ['main']
     tags: ['v*.*.*']
   pull_request:
     paths:
@@ -73,6 +75,16 @@ jobs:
             echo "platforms=linux/amd64" >> "$GITHUB_OUTPUT"
           fi
 
+      # GHCR rejects uppercase in an image path and this org's login has
+      # capitals, so normalize before it reaches metadata-action or the
+      # anonymous-pull verification.
+      - name: Resolve image name
+        id: image
+        shell: bash
+        env:
+          OWNER: ${{ github.repository_owner }}
+        run: echo "name=ghcr.io/${OWNER,,}/aiwp-design" >> "$GITHUB_OUTPUT"
+
       - name: Set up QEMU
         if: ${{ steps.mode.outputs.publish == 'true' }}
         uses: docker/setup-qemu-action@v3
@@ -94,13 +106,17 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/${{ github.repository_owner }}/od
+          images: ${{ steps.image.outputs.name }}
           # spec §15.1 tag scheme:
           #   - vX.Y.Z push             → :X.Y.Z + :latest
+          #   - main push               → :main + :main-sha-<short> (never :latest,
+          #                               which stays pinned to the last release)
           #   - workflow_call (stable)  → :<release_version> + optional :latest
           #   - PR / manual validate    → local-only sha tags (only when not publishing)
           tags: |
             type=semver,pattern={{version}}
+            type=raw,value=main,enable=${{ github.ref == 'refs/heads/main' }}
+            type=sha,prefix=main-sha-,format=short,enable=${{ github.ref == 'refs/heads/main' }}
             type=raw,value=${{ inputs.release_version }},enable=${{ inputs.release_version != '' }}
             type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/v') }}
             type=raw,value=latest,enable=${{ inputs.publish_latest == true }}
@@ -129,8 +145,10 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      # Release-only: :main images are internal and the package may be private,
+      # in which case an anonymous pull is expected to fail.
       - name: Verify public GHCR pull access
-        if: ${{ steps.mode.outputs.publish == 'true' }}
+        if: ${{ steps.mode.outputs.publish == 'true' && github.ref != 'refs/heads/main' }}
         shell: bash
         env:
           PUBLISHED_TAGS: ${{ steps.meta.outputs.tags }}
@@ -147,7 +165,7 @@ jobs:
                 "Published image is not anonymously pullable: $image" \
                 "" \
                 "Make the GHCR package public before cutting a public Docker release:" \
-                "GitHub organization -> Packages -> od -> Package settings -> Change visibility -> Public." >&2
+                "GitHub organization -> Packages -> aiwp-design -> Package settings -> Change visibility -> Public." >&2
               exit 1
             fi
           done <<< "$PUBLISHED_TAGS"
