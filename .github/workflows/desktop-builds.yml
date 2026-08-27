@@ -1,0 +1,161 @@
+name: Desktop builds
+
+# Rolling desktop builds for internal distribution.
+#
+# Every push to main produces macOS / Windows / Linux bundles and republishes
+# them to a single prerelease at the `main-build` tag, so the download URLs stay
+# stable and the Releases page does not accumulate one entry per commit.
+#
+# This is NOT the upstream release pipeline. `release-*.yml` publish exact
+# versions to R2 with signing, notarization, and updater feeds, and need
+# secrets this fork does not hold. These builds are unsigned — see the release
+# notes generated below.
+
+on:
+  push:
+    branches: ['main']
+  workflow_dispatch:
+
+# A newer commit makes an in-flight build obsolete: only the newest main build
+# can win the `main-build` tag anyway, and desktop bundles are slow enough that
+# overlapping runs would queue for a long time.
+concurrency:
+  group: desktop-builds-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: ${{ matrix.label }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 90
+    strategy:
+      # One platform failing should not withhold the bundles that did build.
+      fail-fast: false
+      matrix:
+        include:
+          - label: macOS (Apple Silicon)
+            runner: macos-latest
+            platform: mac
+            format: dmg
+            # Globbed rather than hardcoded: the namespace segment is derived
+            # from the app version, so it changes the moment a channel suffix
+            # is added to package.json.
+            glob: .tmp/tools-pack/out/mac/namespaces/*/dmg/*.dmg
+            asset: AIWP-Design-macos-arm64.dmg
+          - label: Windows (x64)
+            runner: windows-latest
+            platform: win
+            format: nsis
+            glob: .tmp/tools-pack/out/win/namespaces/*/builder/*-setup.exe
+            asset: AIWP-Design-windows-x64.exe
+          - label: Linux (x86_64)
+            runner: ubuntu-latest
+            platform: linux
+            format: appimage
+            glob: .tmp/tools-pack/out/linux/namespaces/**/*.AppImage
+            asset: AIWP-Design-linux-x86_64.AppImage
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      # Installed before setup-node so its pnpm cache resolution finds a store.
+      # Corepack is deliberately not used: it is absent from some Node
+      # distributions and fails with EPERM on Windows runners.
+      - name: Install pnpm
+        shell: bash
+        run: npm install -g pnpm@10.33.2
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      # postinstall compiles tools-pack and the packages it depends on, which
+      # is what puts the `tools-pack` binary on the path.
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build ${{ matrix.platform }} bundle
+        run: pnpm tools-pack ${{ matrix.platform }} build --to ${{ matrix.format }}
+
+      # Bundle filenames carry the namespace token, so normalize to a stable
+      # asset name before upload — the release URLs must not move between runs.
+      - name: Collect artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s globstar nullglob
+          matches=(${{ matrix.glob }})
+          if [ ${#matches[@]} -eq 0 ]; then
+            echo "No bundle matched ${{ matrix.glob }}" >&2
+            echo "Tree under .tmp/tools-pack/out:" >&2
+            find .tmp/tools-pack/out -maxdepth 6 -type f >&2 || true
+            exit 1
+          fi
+          mkdir -p dist
+          cp "${matches[0]}" "dist/${{ matrix.asset }}"
+          ls -lh dist
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.asset }}
+          path: dist/${{ matrix.asset }}
+          if-no-files-found: error
+          retention-days: 14
+
+  publish:
+    name: Publish rolling release
+    needs: build
+    runs-on: ubuntu-latest
+    # Publish whatever built, even if one platform failed, so a broken Windows
+    # build does not also withhold a working macOS one.
+    if: ${{ always() && needs.build.result != 'cancelled' }}
+    permissions:
+      contents: write
+    steps:
+      # Only the notes file is needed here; the bundles arrive as artifacts.
+      - name: Check out release notes
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/release-notes
+          sparse-checkout-cone-mode: false
+
+      - name: Download bundles
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Republish main-build release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: main-build
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [ -z "$(ls -A dist 2>/dev/null)" ]; then
+            echo "No bundles were produced; nothing to publish." >&2
+            exit 1
+          fi
+          ls -lh dist
+
+          # Delete and recreate rather than edit: the tag has to move to the
+          # commit being built, and replacing the release is the only way to
+          # guarantee a bundle from an earlier commit is not left attached.
+          gh release delete "$TAG" --yes --cleanup-tag --repo "$GITHUB_REPOSITORY" || true
+
+          gh release create "$TAG" dist/* \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$GITHUB_SHA" \
+            --title "Development build (main)" \
+            --prerelease \
+            --notes-file .github/release-notes/main-build.md
+
+          echo "Published ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/releases/tag/${TAG}"

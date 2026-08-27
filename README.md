@@ -15,6 +15,16 @@ streamed into a live preview you can keep editing.</p>
   <a href="https://github.com/orgs/SMB-Team-Technology/packages/container/package/aiwp-design">
     <img src="https://img.shields.io/badge/ghcr.io-aiwp--design%3Amain-0B2C4D?logo=docker&logoColor=white" alt="Latest container image on GHCR" />
   </a>
+  <a href="https://github.com/SMB-Team-Technology/aiwp-design/actions/workflows/desktop-builds.yml">
+    <img src="https://github.com/SMB-Team-Technology/aiwp-design/actions/workflows/desktop-builds.yml/badge.svg?branch=main" alt="Desktop build status" />
+  </a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/SMB-Team-Technology/aiwp-design/releases/tag/main-build"><b>Download the latest build</b></a> ·
+  <a href="https://github.com/SMB-Team-Technology/aiwp-design/releases/download/main-build/AIWP-Design-macos-arm64.dmg">macOS</a> ·
+  <a href="https://github.com/SMB-Team-Technology/aiwp-design/releases/download/main-build/AIWP-Design-windows-x64.exe">Windows</a> ·
+  <a href="https://github.com/SMB-Team-Technology/aiwp-design/releases/download/main-build/AIWP-Design-linux-x86_64.AppImage">Linux</a>
 </p>
 
 ---
@@ -84,7 +94,12 @@ without TLS and authentication in front of it.
 
 ## Packaged builds
 
-Run these from the repository root, and run `pnpm install` first — it links the
+Every push to `main` builds macOS, Windows, and Linux bundles and republishes
+them to the **[`main-build` prerelease](https://github.com/SMB-Team-Technology/aiwp-design/releases/tag/main-build)**,
+so the download URLs above stay stable. Those builds are unsigned — the release
+notes explain the Gatekeeper and SmartScreen steps recipients need.
+
+To build locally instead, run these from the repository root, and run `pnpm install` first — it links the
 `tools-pack` binary into `node_modules/.bin` and compiles the tools it depends
 on. Without it the command does not exist and pnpm reports
 `Command "tools-pack" not found`.
