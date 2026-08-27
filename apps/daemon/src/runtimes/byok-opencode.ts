@@ -74,7 +74,7 @@ export function buildOpenCodeByokProviderConfig(
   const config = {
     provider: {
       [BYOK_OPENCODE_PROVIDER_ID]: {
-        name: 'OpenDesign BYOK',
+        name: 'AIWP Design BYOK',
         ...providerEntry,
         models: {
           [rawModel]: {

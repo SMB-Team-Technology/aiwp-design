@@ -75,7 +75,12 @@ export const DEFAULT_ORBIT: OrbitConfig = {
 };
 
 export const DEFAULT_CONFIG: AppConfig = {
-  mode: 'daemon',
+  // This fork is bring-your-own-key only: a fresh install talks to Anthropic
+  // directly with the user's own key rather than shelling out to a local agent
+  // CLI, so there is nothing to install and nothing to sign into before the
+  // first prompt. Users who do have a CLI can still switch to 'daemon' in
+  // Settings — this only changes what an unconfigured install starts as.
+  mode: 'api',
   apiKey: '',
   baseUrl: 'https://api.anthropic.com',
   model: 'claude-sonnet-4-5',
@@ -90,7 +95,12 @@ export const DEFAULT_CONFIG: AppConfig = {
   agentId: null,
   skillId: null,
   designSystemId: null,
-  onboardingCompleted: false,
+  // No first-run flow ships in this fork (see `shouldRouteToFirstRunOnboarding`),
+  // so a fresh config starts in the same state a completed onboarding would
+  // leave it. Downstream consumers key real behaviour off this flag — the
+  // privacy disclosure and the agent-model fallback both wait on it — and would
+  // otherwise stall forever waiting for a flow that never runs.
+  onboardingCompleted: true,
   theme: FORCED_APP_THEME,
   accentColor: DEFAULT_ACCENT_COLOR,
   mediaProviders: {},
@@ -122,7 +132,7 @@ export interface KnownProvider {
   baseUrl: string;
   /** Ranked provider-owned preferences, matched against the live account catalogue. */
   preferredModels: string[];
-  /** Model ids that OpenDesign previously preselected but the provider retired. */
+  /** Model ids that AIWP Design previously preselected but the provider retired. */
   retiredModels?: string[];
   /** Optional provider-specific key console link shown in Settings. */
   apiKeyConsoleLink?: { host: string; url: string };

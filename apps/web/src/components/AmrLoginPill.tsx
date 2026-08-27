@@ -40,6 +40,7 @@ import {
 import { Icon, type IconName } from './Icon';
 import { SignOutConfirmDialog } from './SignOutConfirmDialog';
 import { amrConsoleUrlForProfile, amrProfileBadgeLabel } from '../runtime/amr-guidance';
+import { CLOUD_ACCOUNTS_ENABLED } from '../brand';
 
 interface AmrLoginPillProps {
   className?: string;
@@ -281,7 +282,7 @@ export function AmrAccountControl({
 // AMR-specific login pill that lives as a sibling inside the installed
 // agent card. The pill polls `/api/integrations/vela/status` after a Sign-in
 // click until the daemon reports loggedIn=true.
-export function AmrLoginPill({
+function AmrLoginPillImpl({
   className,
   hideSignedOutStatus = false,
   hideSignedInStatus = false,
@@ -842,4 +843,14 @@ export function AmrLoginPill({
       ) : null}
     </div>
   );
+}
+
+/**
+ * Hosted-account sign-in control. This fork ships without a hosted account, so
+ * the pill renders nothing; the upstream implementation is kept intact behind
+ * the flag so rebases stay mechanical.
+ */
+export function AmrLoginPill(props: AmrLoginPillProps) {
+  if (!CLOUD_ACCOUNTS_ENABLED) return null;
+  return <AmrLoginPillImpl {...props} />;
 }

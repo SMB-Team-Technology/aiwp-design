@@ -1,4 +1,5 @@
 import type { WorkspaceContextState } from '../collab/useWorkspaceContext';
+import { CLOUD_ACCOUNTS_ENABLED } from '../brand';
 import { planUnlimitedTier } from '../runtime/amr-unlimited-models';
 
 export type EntryRailAccountFooterState = 'hidden' | 'syncing' | 'recovering' | 'sign-in';
@@ -27,6 +28,9 @@ export function shouldShowCreditsBalance(input: {
   tier: string | null | undefined;
   balanceUsd: string | null | undefined;
 }): boolean {
+  // No hosted account means no wallet to meter, so the pill never has a
+  // number to show.
+  if (!CLOUD_ACCOUNTS_ENABLED) return false;
   if (planUnlimitedTier(input.tier) === null) return true;
   const raw = input.balanceUsd?.trim() ?? '';
   if (!raw) return true;
@@ -57,6 +61,9 @@ export function resolveEntryRailAccountFooterState(
   amrLoggedIn: boolean | null | undefined,
   amrSessionState?: import('@open-design/contracts').AmrSessionState,
 ): EntryRailAccountFooterState {
+  // This fork has no hosted account, so the rail never offers a sign-in entry
+  // and never reports account sync state.
+  if (!CLOUD_ACCOUNTS_ENABLED) return 'hidden';
   if (requiresAmrReauthentication(amrSessionState, workspaceState.failure)) return 'sign-in';
   if (workspaceState.context) return 'hidden';
   if (workspaceState.loading) return 'syncing';
