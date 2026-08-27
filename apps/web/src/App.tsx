@@ -2,6 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, typ
 import { flushSync } from 'react-dom';
 import { AnimatePresence, motion, MotionConfig } from 'motion/react';
 import { Button } from '@open-design/components';
+import { CLOUD_ACCOUNTS_ENABLED } from './brand';
 import { reportAgentDetectDiagnostics } from './analytics/agent-detect';
 import { useAnalytics } from './analytics/provider';
 import {
@@ -281,11 +282,11 @@ const AGENT_FOCUS_REFRESH_THROTTLE_MS = 10_000;
 /**
  * Whether this launch should hand the user to the first-run onboarding flow.
  *
- * Two conditions, both about the *user*, neither about where they happen to be
- * in the app: they have never completed onboarding (on either the local or the
- * daemon copy — `mergeDaemonConfig` ratchets the two before this runs), and
- * they did not arrive through an explicit deep link that onboarding must not
- * hijack (the collab demo and the community gallery are shareable URLs).
+ * Upstream's onboarding exists to pick an execution path and sign the user into
+ * the hosted account. This fork has neither: it is bring-your-own Anthropic key
+ * only, so there is nothing to ask on first run and the app opens straight to
+ * the workspace. The upstream predicate is kept below the flag so a rebase can
+ * see exactly what was bypassed.
  *
  * Deliberately a pure predicate over a resolved config: the redirect belongs to
  * the one-shot boot pass, and expressing it as a function of "who the user is"
@@ -295,6 +296,7 @@ export function shouldRouteToFirstRunOnboarding(
   config: AppConfig,
   pathname: string,
 ): boolean {
+  if (!CLOUD_ACCOUNTS_ENABLED) return false;
   if (config.onboardingCompleted === true) return false;
   if (
     pathname.startsWith('/projects/')
@@ -912,7 +914,7 @@ function AppInner() {
   // Observability marker. `apps/web/src/observability/white-screen.ts`
   // keys its "app actually mounted" success condition on this attribute
   // because the dynamic-import loading shell (`<div class="od-loading-shell">
-  // Loading OpenDesign…</div>`) is itself >MIN_VISIBLE_TEXT and would
+  // Loading AIWP Design…</div>`) is itself >MIN_VISIBLE_TEXT and would
   // otherwise be mistaken for a real mount. Survives subsequent render
   // crashes — once App has mounted at least once, it's no longer a white
   // screen (subsequent failures show up as `$exception`).

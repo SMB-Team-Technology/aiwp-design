@@ -21,7 +21,7 @@ export const PL_SKILL_COPY: Record<string, { description?: string; examplePrompt
   },
   'agent-browser': {
     description:
-      'CLI do automatyzacji przeglądarki dla agentów AI. Użyj, gdy użytkownik potrzebuje sprawdzić,\nprzetestować lub zautomatyzować zachowanie przeglądarki: nawigację po stronach, wypełnianie formularzy,\nklikanie przycisków, robienie zrzutów ekranu, wyodrębnianie danych ze strony, odczytywanie wybranego\nkontekstu karty przeglądarki w OpenDesign, testowanie aplikacji webowych, dogfooding podglądów OpenDesign,\nQA, polowanie na błędy lub przegląd jakości aplikacji. Preferuj lokalne adresy URL podglądu OpenDesign,\nchyba że użytkownik wyraźnie poprosi o przeglądanie zewnętrzne.',
+      'CLI do automatyzacji przeglądarki dla agentów AI. Użyj, gdy użytkownik potrzebuje sprawdzić,\nprzetestować lub zautomatyzować zachowanie przeglądarki: nawigację po stronach, wypełnianie formularzy,\nklikanie przycisków, robienie zrzutów ekranu, wyodrębnianie danych ze strony, odczytywanie wybranego\nkontekstu karty przeglądarki w AIWP Design, testowanie aplikacji webowych, dogfooding podglądów AIWP Design,\nQA, polowanie na błędy lub przegląd jakości aplikacji. Preferuj lokalne adresy URL podglądu AIWP Design,\nchyba że użytkownik wyraźnie poprosi o przeglądanie zewnętrzne.',
     examplePrompt:
       'CLI do automatyzacji przeglądarki dla agentów AI.',
   },
@@ -849,7 +849,7 @@ export const PL_SKILL_COPY: Record<string, { description?: string; examplePrompt
   },
   'ui-ux-pro-max': {
     description:
-      'Wpis UI/UX Pro Max wyłącznie w katalogu. Pełne szablony źródłowe, dane i przepływ wyszukiwania nie są dołączone do OpenDesign.',
+      'Wpis UI/UX Pro Max wyłącznie w katalogu. Pełne szablony źródłowe, dane i przepływ wyszukiwania nie są dołączone do AIWP Design.',
     examplePrompt:
       'Wpis UI/UX Pro Max wyłącznie w katalogu.',
   },

@@ -74,6 +74,7 @@ import {
 } from '../collab/useWorkspaceContext';
 import { canUpgradeFromPlanTier, resolvePlanLabelTier } from '../collab/team-plan';
 import { shouldShowCreditsBalance } from './entry-rail-account-state';
+import { CLOUD_ACCOUNTS_ENABLED, COMMUNITY_LINKS_ENABLED } from '../brand';
 import { amrPlansUrlForProfile } from '../runtime/amr-guidance';
 import { useWorkspaceInvalidation } from '../collab/workspace-events';
 import { resolveDeepSeekV4FlashCampaignAudience } from '../campaigns/deepseek-v4-flash';
@@ -798,7 +799,7 @@ export function EntryTopRightCluster({
           {/* GitHub star chip: its own option in the cluster, right after the
               campaign badge (per product) — it used to live in the account
               menu's social row. */}
-          {clusterVisible ? (
+          {clusterVisible && COMMUNITY_LINKS_ENABLED ? (
             <a
               className="entry-top-right-github"
               href={REPO_URL}
@@ -889,7 +890,7 @@ export function EntryTopRightCluster({
                         The balance row links out to B's console. It receives
                         only an explicitly scoped money value; raw credits are
                         never formatted as dollars here. */}
-                    {billing || balanceLabel ? (
+                    {CLOUD_ACCOUNTS_ENABLED && (billing || balanceLabel) ? (
                       <div className="entry-nav-rail__menu-credits">
                         <div className="entry-nav-rail__menu-credits-head">
                           <span className="entry-nav-rail__menu-credits-plan">
@@ -947,53 +948,59 @@ export function EntryTopRightCluster({
                     >
                       <Icon name="settings" size={15} /> {t('entry.accountSettings')}
                     </button>
-                    <button
-                      type="button"
-                      className="entry-nav-rail__menu-item"
-                      role="menuitem"
-                      aria-haspopup="dialog"
-                      aria-expanded={messageCenterOpen}
-                      data-testid="account-menu-message-center"
-                      onClick={() => {
-                        trackAccountAction('message_center');
-                        closeAccountMenu();
-                        setMessageCenterOpen(true);
-                      }}
-                    >
-                      <Icon name="bell" size={15} /> {t('messageCenter.title')}
-                      {messageUnreadCount > 0 ? (
-                        <span className="entry-nav-rail__menu-item-dot" aria-hidden />
-                      ) : null}
-                    </button>
+                    {CLOUD_ACCOUNTS_ENABLED ? (
+                      <button
+                        type="button"
+                        className="entry-nav-rail__menu-item"
+                        role="menuitem"
+                        aria-haspopup="dialog"
+                        aria-expanded={messageCenterOpen}
+                        data-testid="account-menu-message-center"
+                        onClick={() => {
+                          trackAccountAction('message_center');
+                          closeAccountMenu();
+                          setMessageCenterOpen(true);
+                        }}
+                      >
+                        <Icon name="bell" size={15} /> {t('messageCenter.title')}
+                        {messageUnreadCount > 0 ? (
+                          <span className="entry-nav-rail__menu-item-dot" aria-hidden />
+                        ) : null}
+                      </button>
+                    ) : null}
                     {/* #5517's account menu goes 设置 → GitHub 帮助 → 功能建议 → 社交行,
                         with no theme row, no language submenu, and no divider in
                         between. Both controls still have a home in 设置·通用 (theme
                         segmented control + language picker), so dropping the
                         duplicates here costs no capability. */}
-                    <a
-                      className="entry-nav-rail__menu-item"
-                      role="menuitem"
-                      href={GITHUB_HELP_URL}
-                      {...externalLinkProps}
-                      onClick={() => {
-                        trackAccountAction('github_help');
-                        closeAccountMenu();
-                      }}
-                    >
-                      <Icon name="comment" size={15} /> {t('entry.accountGithubHelp')}
-                    </a>
-                    <a
-                      className="entry-nav-rail__menu-item"
-                      role="menuitem"
-                      href={GITHUB_FEATURE_URL}
-                      {...externalLinkProps}
-                      onClick={() => {
-                        trackAccountAction('feature_request');
-                        closeAccountMenu();
-                      }}
-                    >
-                      <Icon name="sparkles" size={15} /> {t('entry.accountFeatureRequest')}
-                    </a>
+                    {COMMUNITY_LINKS_ENABLED ? (
+                      <>
+                        <a
+                          className="entry-nav-rail__menu-item"
+                          role="menuitem"
+                          href={GITHUB_HELP_URL}
+                          {...externalLinkProps}
+                          onClick={() => {
+                            trackAccountAction('github_help');
+                            closeAccountMenu();
+                          }}
+                        >
+                          <Icon name="comment" size={15} /> {t('entry.accountGithubHelp')}
+                        </a>
+                        <a
+                          className="entry-nav-rail__menu-item"
+                          role="menuitem"
+                          href={GITHUB_FEATURE_URL}
+                          {...externalLinkProps}
+                          onClick={() => {
+                            trackAccountAction('feature_request');
+                            closeAccountMenu();
+                          }}
+                        >
+                          <Icon name="sparkles" size={15} /> {t('entry.accountFeatureRequest')}
+                        </a>
+                      </>
+                    ) : null}
                     {/* The Discord/X/mail social row used to sit here (#5517).
                         It now lives in the nav rail's footer — see
                         `RailSocialRow` — so the account menu stays a pure list
@@ -1174,7 +1181,19 @@ export function WorkspaceTopRightAccountCluster({
  * under `area: 'account_menu'` so the existing funnel stays comparable across
  * the move out of that menu.
  */
-function RailSocialRow({
+/**
+ * Discord / X / mail links back to the upstream open-source community. Hidden
+ * in this fork — see `COMMUNITY_LINKS_ENABLED`.
+ */
+function RailSocialRow(props: {
+  page: TrackingWorkspacePage;
+  dimensions: ReturnType<typeof workspaceAnalyticsDimensions>;
+}) {
+  if (!COMMUNITY_LINKS_ENABLED) return null;
+  return <RailSocialRowImpl {...props} />;
+}
+
+function RailSocialRowImpl({
   page,
   dimensions,
 }: {

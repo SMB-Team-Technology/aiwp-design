@@ -183,6 +183,11 @@ import { MemoryModelInline } from './MemoryModelInline';
 import { MemorySection } from './MemorySection';
 import { ByokConnectionTestControl } from './byok/ByokConnectionTestControl';
 import { ByokKeyField } from './byok/ByokKeyField';
+import {
+  CLOUD_ACCOUNTS_ENABLED,
+  MCP_SERVER_SECTION_ENABLED,
+  MULTI_PROVIDER_SETTINGS_ENABLED,
+} from '../brand';
 import { ByokModelField } from './byok/ByokModelField';
 import { ByokProviderBaseUrl } from './byok/ByokProviderBaseUrl';
 import { ByokProviderPicker } from './byok/ByokProviderPicker';
@@ -886,7 +891,7 @@ function cleanAgentVersionLabel(
 }
 
 function displayAgentName(agent: Pick<AgentInfo, 'id' | 'name'>): string {
-  return agent.id === 'amr' ? 'OpenDesign' : agent.name;
+  return agent.id === 'amr' ? 'AIWP Design' : agent.name;
 }
 
 const AGENT_CLI_ENV_FIELDS = [
@@ -4328,8 +4333,19 @@ export function SettingsDialog({
             >
               <Icon name="sliders" size={18} />
               <span>
-                <strong>{t('settings.envConfigure')}</strong>
-                <small>{`${t('settings.localCli')} / ${t('settings.modeApiMeta')}`}</small>
+                {/* This fork offers one provider, so the section is named for
+                    the single thing it holds — the user's Anthropic key —
+                    rather than upstream's "Models & providers" chooser. */}
+                <strong>
+                  {MULTI_PROVIDER_SETTINGS_ENABLED
+                    ? t('settings.envConfigure')
+                    : t('settings.apiKey')}
+                </strong>
+                <small>
+                  {MULTI_PROVIDER_SETTINGS_ENABLED
+                    ? `${t('settings.localCli')} / ${t('settings.modeApiMeta')}`
+                    : 'Anthropic'}
+                </small>
               </span>
             </button>
             <button
@@ -4387,17 +4403,19 @@ export function SettingsDialog({
                 <small>Image / video / audio</small>
               </span>
             </button>
-            <button
-              type="button"
-              className={`settings-nav-item${activeSection === 'integrations' ? ' active' : ''}`}
-              onClick={() => setActiveSection('integrations')}
-            >
-              <Icon name="puzzle" size={18} />
-              <span>
-                <strong>{t('settings.mcpServerTitle')}</strong>
-                <small>{t('settings.mcpServerHint')}</small>
-              </span>
-            </button>
+            {MCP_SERVER_SECTION_ENABLED ? (
+              <button
+                type="button"
+                className={`settings-nav-item${activeSection === 'integrations' ? ' active' : ''}`}
+                onClick={() => setActiveSection('integrations')}
+              >
+                <Icon name="puzzle" size={18} />
+                <span>
+                  <strong>{t('settings.mcpServerTitle')}</strong>
+                  <small>{t('settings.mcpServerHint')}</small>
+                </span>
+              </button>
+            ) : null}
             <button
               type="button"
               className={`settings-nav-item${activeSection === 'privacy' ? ' active' : ''}`}
@@ -4429,6 +4447,7 @@ export function SettingsDialog({
                   itself) is sticky so it can paint an opaque full-width strip
                   behind the pill — otherwise cards would show through around
                   the pill's rounded corners mid-scroll. */}
+              {MULTI_PROVIDER_SETTINGS_ENABLED ? (
               <div className="settings-execution-sticky">
               <div
                 className="seg-control"
@@ -4474,8 +4493,9 @@ export function SettingsDialog({
                 </button>
               </div>
               </div>
-              {cfg.mode === 'daemon' && !amrCardSignedIn ? (
-                // Only prompt to sign into OpenDesign Cloud when NOT already
+              ) : null}
+              {CLOUD_ACCOUNTS_ENABLED && cfg.mode === 'daemon' && !amrCardSignedIn ? (
+                // Only prompt to sign into AIWP Design Cloud when NOT already
                 // signed in — the AMR/vela session IS the cloud identity (one
                 // session drives both), so a logged-in user has nothing to do
                 // here and the callout was showing spuriously.
@@ -4484,7 +4504,7 @@ export function SettingsDialog({
                     <strong>{t('settings.cloudCalloutTitle')}</strong>
                     <p>{t('settings.cloudCalloutBody')}</p>
                   </div>
-                  {/* Same device-auth flow as the 授权 button on the OpenDesign
+                  {/* Same device-auth flow as the 授权 button on the AIWP Design
                       agent card below — the AMR/vela session IS the cloud
                       identity, so signing in here is that one flow. This used to
                       navigate to onboarding, which walked the user through the
@@ -4505,7 +4525,9 @@ export function SettingsDialog({
                   />
                 </div>
               ) : null}
-              {cfg.mode === 'api' ? (
+              {/* Provider chip row. Hidden in this fork: Anthropic is the only
+                  provider, so there is nothing to pick between. */}
+              {MULTI_PROVIDER_SETTINGS_ENABLED && cfg.mode === 'api' ? (
                 <div
                   className="protocol-chips protocol-chips--providers"
                   role="tablist"
@@ -5851,7 +5873,7 @@ export function SettingsDialog({
               }}
             />
           ) : null}
-          {activeSection === 'integrations' ? <IntegrationsSection /> : null}
+          {MCP_SERVER_SECTION_ENABLED && activeSection === 'integrations' ? <IntegrationsSection /> : null}
 
           {activeSection === 'mcpClient' ? <McpClientSection surface="settings" /> : null}
 
@@ -8153,7 +8175,7 @@ function MediaProvidersSection({
 // Important: every snippet uses absolute paths to the daemon's current
 // Node-compatible runtime and built cli.js, fetched at runtime. macOS
 // and Linux ship a system /usr/bin/od (octal-dump) that shadows any
-// `od` we might add to PATH, and most OpenDesign users run from
+// `od` we might add to PATH, and most AIWP Design users run from
 // source where `od` is not installed globally. The installer panel
 // must NOT reference bare `od`.
 type McpClientId =

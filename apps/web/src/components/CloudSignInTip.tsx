@@ -20,6 +20,8 @@ import {
   notifyWorkspaceContextRefresh,
 } from '../collab/useWorkspaceContext';
 
+import { CLOUD_ACCOUNTS_ENABLED } from '../brand';
+
 const DISMISSED_KEY = 'od.entry.cloudSignInTip.dismissed';
 
 /**
@@ -104,14 +106,14 @@ export function RailAccountRecoveryTip() {
 }
 
 /**
- * The signed-out rail's bottom callout (#5517 "OpenDesign Cloud 版" card).
+ * The signed-out rail's bottom callout (#5517 "AIWP Design Cloud 版" card).
  * The demo's card jumps to a mock sign-in; the product card IS the sign-in:
  * clicking it kicks off the same vela device-auth flow the onboarding/AMR
  * pill uses — pending state with a spinner + cancel + the manual activation
  * link fallback — and on success every workspace surface is nudged to
  * re-read, which swaps the rail to the signed-in form (unmounting the card).
  */
-export function CloudSignInTip() {
+function CloudSignInTipImpl() {
   const { t } = useI18n();
   const [state, setState] = useState<TipState>('idle');
   const [status, setStatus] = useState<VelaLoginStatus | null>(null);
@@ -262,4 +264,13 @@ export function CloudSignInTip() {
       )}
     </section>
   );
+}
+
+/**
+ * Rail sign-in card. Hidden in this fork — see `AmrLoginPill` for the same
+ * flag-gated wrapper pattern.
+ */
+export function CloudSignInTip() {
+  if (!CLOUD_ACCOUNTS_ENABLED) return null;
+  return <CloudSignInTipImpl />;
 }

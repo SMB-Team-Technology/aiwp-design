@@ -4,20 +4,20 @@ import { stripRegistryQuotedValue } from "@/win/registry.js";
 
 describe("stripRegistryQuotedValue", () => {
   it("returns the quoted body when the value is fully quoted", () => {
-    expect(stripRegistryQuotedValue('"C:\\Program Files\\Open Design\\Uninstall.exe"')).toBe(
-      "C:\\Program Files\\Open Design\\Uninstall.exe",
+    expect(stripRegistryQuotedValue('"C:\\Program Files\\AIWP Design\\Uninstall.exe"')).toBe(
+      "C:\\Program Files\\AIWP Design\\Uninstall.exe",
     );
   });
 
   it("returns the inner segment when the quoted region carries trailing flags", () => {
-    expect(stripRegistryQuotedValue('"C:\\Program Files\\Open Design\\Uninstall.exe" /S')).toBe(
-      "C:\\Program Files\\Open Design\\Uninstall.exe",
+    expect(stripRegistryQuotedValue('"C:\\Program Files\\AIWP Design\\Uninstall.exe" /S')).toBe(
+      "C:\\Program Files\\AIWP Design\\Uninstall.exe",
     );
   });
 
   it("trims unquoted values and leaves them otherwise unchanged", () => {
-    expect(stripRegistryQuotedValue("  C:\\Open Design\\Uninstall.exe  ")).toBe(
-      "C:\\Open Design\\Uninstall.exe",
+    expect(stripRegistryQuotedValue("  C:\\AIWP Design\\Uninstall.exe  ")).toBe(
+      "C:\\AIWP Design\\Uninstall.exe",
     );
   });
 

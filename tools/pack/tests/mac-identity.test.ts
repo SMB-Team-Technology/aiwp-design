@@ -47,10 +47,10 @@ describe("resolveMacInstallIdentity", () => {
   it("keeps stable builds on the canonical mac identity", () => {
     expect(resolveMacInstallIdentity(makeConfig("/work", "release-stable"))).toMatchObject({
       appId: "io.open-design.desktop",
-      installerTitle: "Open Design",
-      productName: "Open Design",
-      publicAppBundleName: "Open Design.app",
-      systemAppBundleName: "Open Design.app",
+      installerTitle: "AIWP Design",
+      productName: "AIWP Design",
+      publicAppBundleName: "AIWP Design.app",
+      systemAppBundleName: "AIWP Design.app",
     });
   });
 
@@ -59,13 +59,13 @@ describe("resolveMacInstallIdentity", () => {
 
     expect(resolveMacInstallIdentity(config)).toEqual({
       appId: "io.open-design.desktop.beta",
-      executableName: "Open Design Beta",
-      installerTitle: "Open Design Beta",
-      productName: "Open Design Beta",
-      publicAppBundleName: "Open Design Beta.app",
-      systemAppBundleName: "Open Design Beta.app",
+      executableName: "AIWP Design Beta",
+      installerTitle: "AIWP Design Beta",
+      productName: "AIWP Design Beta",
+      publicAppBundleName: "AIWP Design Beta.app",
+      systemAppBundleName: "AIWP Design Beta.app",
     });
-    expect(resolveMacPaths(config).appPath).toMatch(/Open Design Beta\.app$/);
+    expect(resolveMacPaths(config).appPath).toMatch(/AIWP Design Beta\.app$/);
   });
 
   it("uses first-class preview app identity for preview release namespaces", () => {
@@ -73,13 +73,13 @@ describe("resolveMacInstallIdentity", () => {
 
     expect(resolveMacInstallIdentity(config)).toEqual({
       appId: "io.open-design.desktop.preview",
-      executableName: "Open Design Preview",
-      installerTitle: "Open Design Preview",
-      productName: "Open Design Preview",
-      publicAppBundleName: "Open Design Preview.app",
-      systemAppBundleName: "Open Design Preview.app",
+      executableName: "AIWP Design Preview",
+      installerTitle: "AIWP Design Preview",
+      productName: "AIWP Design Preview",
+      publicAppBundleName: "AIWP Design Preview.app",
+      systemAppBundleName: "AIWP Design Preview.app",
     });
-    expect(resolveMacPaths(config).appPath).toMatch(/Open Design Preview\.app$/);
+    expect(resolveMacPaths(config).appPath).toMatch(/AIWP Design Preview\.app$/);
   });
 
   it("uses first-class prerelease app identity for prerelease release versions and namespaces", () => {
@@ -91,16 +91,16 @@ describe("resolveMacInstallIdentity", () => {
 
     expect(resolveMacInstallIdentity(prereleaseVersionConfig)).toEqual({
       appId: "io.open-design.desktop.prerelease",
-      executableName: "Open Design Prerelease",
-      installerTitle: "Open Design Prerelease",
-      productName: "Open Design Prerelease",
-      publicAppBundleName: "Open Design Prerelease.app",
-      systemAppBundleName: "Open Design Prerelease.app",
+      executableName: "AIWP Design Prerelease",
+      installerTitle: "AIWP Design Prerelease",
+      productName: "AIWP Design Prerelease",
+      publicAppBundleName: "AIWP Design Prerelease.app",
+      systemAppBundleName: "AIWP Design Prerelease.app",
     });
-    expect(resolveMacPaths(prereleaseVersionConfig).appPath).toMatch(/Open Design Prerelease\.app$/);
+    expect(resolveMacPaths(prereleaseVersionConfig).appPath).toMatch(/AIWP Design Prerelease\.app$/);
     expect(resolveMacInstallIdentity(prereleaseNamespaceConfig)).toMatchObject({
-      productName: "Open Design Prerelease",
-      publicAppBundleName: "Open Design Prerelease.app",
+      productName: "AIWP Design Prerelease",
+      publicAppBundleName: "AIWP Design Prerelease.app",
     });
   });
 });
