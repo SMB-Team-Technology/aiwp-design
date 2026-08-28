@@ -326,7 +326,7 @@ export interface MediaModel {
  * `packages/model-bank/src/aiModels/openai.ts` and friends in lobehub.
  */
 export const IMAGE_MODELS: MediaModel[] = [
-  { id: 'vela/gpt-image-2', label: 'gpt-image-2 (Cloud)', hint: 'AIWP Design Cloud · managed image generation and editing', provider: 'vela', caps: ['t2i', 'i2i'], default: true },
+  { id: 'vela/gpt-image-2', label: 'gpt-image-2 (Cloud)', hint: 'AIWP Design Cloud · managed image generation and editing', provider: 'vela', caps: ['t2i', 'i2i'] },
   { id: 'vela/nano-banana-2', label: 'nano-banana-2 (Cloud)', hint: 'AIWP Design Cloud · managed image generation and editing', provider: 'vela', caps: ['t2i', 'i2i'] },
   { id: 'vela/nano-banana-2-lite', label: 'nano-banana-2-lite (Cloud)', hint: 'AIWP Design Cloud · fast managed image generation and editing', provider: 'vela', caps: ['t2i', 'i2i'] },
   { id: 'vela/seedream-5.0', label: 'seedream-5.0 (Cloud)', hint: 'AIWP Design Cloud · managed image generation and editing', provider: 'vela', caps: ['t2i', 'i2i'] },
@@ -484,7 +484,7 @@ export const IMAGE_MODELS: MediaModel[] = [
   },
 
   // OpenRouter image models.
-  { id: 'openrouter/google/gemini-2.5-flash-image', label: 'gemini-flash-image (OR)', hint: 'OpenRouter · Gemini', provider: 'openrouter', caps: ['t2i'] },
+  { id: 'openrouter/google/gemini-2.5-flash-image', label: 'gemini-flash-image (OR)', hint: 'OpenRouter · Gemini', provider: 'openrouter', caps: ['t2i'], default: true },
   { id: 'openrouter/black-forest-labs/flux-1.1-pro', label: 'flux-1.1-pro (OR)', hint: 'OpenRouter · BFL', provider: 'openrouter', caps: ['t2i'] },
   { id: 'openrouter/recraft/recraft-v3', label: 'recraft-v3 (OR)', hint: 'OpenRouter · Recraft', provider: 'openrouter', caps: ['t2i'] },
 
@@ -545,7 +545,6 @@ export const VIDEO_MODELS: MediaModel[] = [
     hint: 'ByteDance · t2v + i2v + audio',
     provider: 'volcengine',
     caps: ['t2v', 'i2v', 'audio'],
-    default: true,
   },
   {
     id: 'doubao-seedance-2-0-fast-260128',

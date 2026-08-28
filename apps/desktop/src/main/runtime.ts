@@ -35,7 +35,7 @@ import { openFirstPartyMailto } from "./mailto-open.js";
 import { openValidatedDirectory } from "./open-path.js";
 import { exportArtifact as exportArtifactFromHtml } from "./artifact-export.js";
 import { createElectronPdfTarget, exportPdfFromHtml, savePrintReadyDocumentAsPdf } from "./pdf-export.js";
-import { SPLASH_VIDEO_DATA_URL } from "./splash-video.js";
+import { SPLASH_MARK_DATA_URL } from "./splash-mark.js";
 import { RendererCrashLoopBreaker } from "./renderer-crash-loop.js";
 import type { PrintReadyPdfOptions } from "./pdf-export.js";
 import type { DesktopUpdater } from "./updater.js";
@@ -929,7 +929,7 @@ const MAC_WINDOW_CHROME_CSS = `
 // Light-background startup splash shown while the web runtime boots. It plays
 // the brand intro clip once and then holds on its final settled logo frame until
 // the main window is ready. The clip is embedded as a base64 data URL so it
-// renders identically in dev and in packaged builds (see `splash-video.ts`).
+// renders identically in dev and in packaged builds (see `splash-mark.ts`).
 function createPendingHtml(): string {
   const start = splashStagePayload("starting");
   const initialPct = Math.max(0, Math.min(100, Math.round((start.step / start.total) * 100)));
@@ -951,11 +951,13 @@ function createPendingHtml(): string {
         display: flex;
         justify-content: center;
       }
-      video {
+      img#splash {
         background: #f2f4f5;
         height: auto;
         max-height: 100%;
-        max-width: 100%;
+        /* The lockup is a wide horizontal mark; cap it well short of the window
+           edge so it reads as a centred brand plate rather than a banner. */
+        max-width: 62%;
         width: auto;
       }
       .boot-stage {
@@ -1010,14 +1012,11 @@ function createPendingHtml(): string {
     </style>
   </head>
   <body>
-    <video
+    <img
       id="splash"
-      autoplay
-      muted
-      playsinline
-      disablepictureinpicture
-      src="${SPLASH_VIDEO_DATA_URL}"
-    ></video>
+      alt="AI Workforce Pro Design"
+      src="${SPLASH_MARK_DATA_URL}"
+    />
     <div class="boot-progress" aria-hidden="true">
       <div class="boot-progress-fill" id="boot-progress-fill" data-pct="${initialPct}" style="width: ${initialPct}%;"></div>
     </div>
@@ -2836,7 +2835,7 @@ export async function createDesktopRuntime(options: DesktopRuntimeOptions): Prom
   // Hold the splash until BOTH (a) the web bundle reports it has mounted — it
   // sets `data-od-app-mounted="1"` on first paint of the real UI — so we never
   // reveal the web's own dark "Loading AIWP Design…" shell, and (b) the splash
-  // has been up at least MIN_SPLASH_MS so the brand clip plays through. A hard
+  // has been up at least MIN_SPLASH_MS so the brand mark does not just flash. A hard
   // ceiling guarantees the user is never stranded on the splash if the mount
   // signal never arrives.
   const revealWhenReady = async (): Promise<void> => {
@@ -2854,7 +2853,7 @@ export async function createDesktopRuntime(options: DesktopRuntimeOptions): Prom
       await delay(WEB_MOUNT_POLL_MS);
     }
     // The real UI has mounted behind the splash; the only thing left is the
-    // minimum-hold so the brand clip plays through. Advance the counter to its
+    // minimum-hold so the brand mark does not just flash. Advance the counter to its
     // final step so the user sees the boot reach completion, not stall at
     // "Opening your workspace".
     setSplashStage(splash, "finishing");

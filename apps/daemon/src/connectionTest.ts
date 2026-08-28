@@ -1344,7 +1344,7 @@ function openAIChatCompletionsProviderCall(
       'content-type': 'application/json',
       authorization: `Bearer ${apiKey}`,
       ...(new URL(baseUrl).hostname === 'openrouter.ai' ? {
-        'HTTP-Referer': 'https://opendesign.dev',
+        'HTTP-Referer': 'https://github.com/SMB-Team-Technology/aiwp-design',
         'X-Title': 'AIWP Design',
       } : {}),
     },
