@@ -83,7 +83,7 @@ export const DEFAULT_CONFIG: AppConfig = {
   mode: 'api',
   apiKey: '',
   baseUrl: 'https://api.anthropic.com',
-  model: 'claude-sonnet-4-5',
+  model: 'claude-opus-5',
   // New configs should be explicit. loadConfig() still detects parsed legacy
   // saved configs that did not have this field and migrates those from their
   // saved baseUrl/model before applying the current migration version.
@@ -154,7 +154,13 @@ export const KNOWN_PROVIDERS: KnownProvider[] = [
     label: 'Anthropic (Claude)',
     protocol: 'anthropic',
     baseUrl: 'https://api.anthropic.com',
-    preferredModels: ['claude-sonnet-4-5', 'claude-opus-4-5', 'claude-haiku-4-5'],
+    preferredModels: ['claude-opus-5', 'claude-sonnet-5', 'claude-haiku-4-5'],
+    // The 4.5-era Sonnet and Opus ids upstream shipped are no longer served on
+    // current keys. Listing them here makes the stale-model path reselect a
+    // live model instead of leaving the run to fail: OpenCode swallows the
+    // provider's 404 and exits 0, which surfaces as the opaque
+    // "completed without producing any output" error rather than a model error.
+    retiredModels: ['claude-sonnet-4-5', 'claude-opus-4-5'],
   },
   {
     label: 'DeepSeek — Anthropic',
