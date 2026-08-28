@@ -325,7 +325,31 @@ export interface MediaModel {
  * Image generation models. Mirrors the breadth of
  * `packages/model-bank/src/aiModels/openai.ts` and friends in lobehub.
  */
-export const IMAGE_MODELS: MediaModel[] = [
+/**
+ * Models whose provider has no renderer wired in the daemon.
+ *
+ * `integrated: false` is the catalogue's own marker for exactly that — the
+ * daemon has no `(provider, surface)` branch for them, so a request falls
+ * through to the stub renderer, which release builds refuse with
+ * `STUB_PROVIDER_DISABLED` ("no configured renderer"). No API key fixes it;
+ * the integration does not exist. Offering them in the picker is how a user
+ * ends up choosing, for example, `flux-1.1-pro` (Black Forest Labs, dead)
+ * instead of the near-identically labelled `flux-1.1-pro (OR)` (OpenRouter,
+ * which works).
+ *
+ * The daemon keeps its full catalogue so a project holding one of these ids
+ * still resolves and reports a real error; this filter only governs what the
+ * picker is allowed to offer.
+ */
+const UNRENDERABLE_PROVIDERS = new Set(
+  MEDIA_PROVIDERS.filter((provider) => provider.integrated === false).map((provider) => provider.id),
+);
+
+function renderable(models: MediaModel[]): MediaModel[] {
+  return models.filter((model) => !UNRENDERABLE_PROVIDERS.has(model.provider));
+}
+
+const CATALOGUE_IMAGE_MODELS: MediaModel[] = [
   { id: 'vela/gpt-image-2', label: 'gpt-image-2 (Cloud)', hint: 'AIWP Design Cloud · managed image generation and editing', provider: 'vela', caps: ['t2i', 'i2i'] },
   { id: 'vela/nano-banana-2', label: 'nano-banana-2 (Cloud)', hint: 'AIWP Design Cloud · managed image generation and editing', provider: 'vela', caps: ['t2i', 'i2i'] },
   { id: 'vela/nano-banana-2-lite', label: 'nano-banana-2-lite (Cloud)', hint: 'AIWP Design Cloud · fast managed image generation and editing', provider: 'vela', caps: ['t2i', 'i2i'] },
@@ -536,7 +560,7 @@ export const IMAGE_MODELS: MediaModel[] = [
  * Video generation models. Mirrors lobehub's volcengine.ts (Seedance,
  * Seedance Lite), kling.ts and friends.
  */
-export const VIDEO_MODELS: MediaModel[] = [
+const CATALOGUE_VIDEO_MODELS: MediaModel[] = [
   { id: 'vela/doubao-seedance-2-0-260128', label: 'seedance-2.0 (Cloud)', hint: 'AIWP Design Cloud · managed text/image-to-video · 720p default', provider: 'vela', caps: ['t2v', 'i2v'] },
   // Volcengine — Seedance 2.0 (integrated).
   {
@@ -660,6 +684,9 @@ export const AUDIO_MODELS_BY_KIND: Record<AudioKind, MediaModel[]> = {
     { id: 'audiocraft', label: 'audiocraft', hint: 'Meta · open', provider: 'replicate', caps: ['sfx', 'music'] },
   ],
 };
+
+export const IMAGE_MODELS: MediaModel[] = renderable(CATALOGUE_IMAGE_MODELS);
+export const VIDEO_MODELS: MediaModel[] = renderable(CATALOGUE_VIDEO_MODELS);
 
 export const MEDIA_ASPECTS: MediaAspect[] = ['1:1', '16:9', '9:16', '4:3', '3:4'];
 
