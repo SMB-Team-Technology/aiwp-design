@@ -97,8 +97,18 @@ jobs:
       # path under .tmp/tools-pack/runtime/...) into the packaged config, and
       # the app then looks for its data directory at a path that exists only
       # here. Portable builds fall back to Electron's per-machine userData.
+      # The updater compares the feed's releaseVersion against the running
+      # app's own version, so a fixed package.json version would mean no build
+      # is ever newer than any other. The run number is monotonic; the patch
+      # position keeps it plain semver, which resolves to the stable channel —
+      # a `-beta.N` style suffix would flip the app onto the beta channel and
+      # change its namespace and app name with it.
       - name: Build ${{ matrix.platform }} bundle
-        run: pnpm tools-pack ${{ matrix.platform }} build --to ${{ matrix.format }} --portable
+        run: >-
+          pnpm tools-pack ${{ matrix.platform }} build
+          --to ${{ matrix.format }}
+          --portable
+          --app-version 0.21.${{ github.run_number }}
 
       # Bundle filenames carry the namespace token, so normalize to a stable
       # asset name before upload — the release URLs must not move between runs.
@@ -150,6 +160,61 @@ jobs:
         with:
           path: dist
           merge-multiple: true
+
+      # The updater feed. Schema is read by apps/desktop/src/main/updater/feed.ts:
+      # `channel` must equal the running app's channel or the check fails with
+      # metadata-channel-mismatch; each platform needs `enabled: true`; and the
+      # checksum is verified against the downloaded bytes before an install is
+      # ever offered. Linux is deliberately absent — the updater supports only
+      # macOS and Windows, so AppImage users update by hand.
+      - name: Generate updater metadata
+        env:
+          VERSION: 0.21.${{ github.run_number }}
+          BASE: ${{ github.server_url }}/${{ github.repository }}/releases/download/main-build
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib, json, os, pathlib
+
+          base = os.environ["BASE"]
+          targets = {
+              "mac": ("arm64", "dmg", "AIWP-Design-macos-arm64.dmg"),
+              "win": ("x64", "installer", "AIWP-Design-windows-x64.exe"),
+          }
+
+          platforms = {}
+          for key, (arch, artifact_key, filename) in targets.items():
+              path = pathlib.Path("dist") / filename
+              if not path.exists():
+                  print(f"skipping {key}: {filename} was not built")
+                  continue
+              digest = hashlib.sha256(path.read_bytes()).hexdigest()
+              platforms[key] = {
+                  "enabled": True,
+                  "arch": arch,
+                  "artifacts": {
+                      artifact_key: {
+                          "name": filename,
+                          "url": f"{base}/{filename}",
+                          "size": path.stat().st_size,
+                          "sha256": digest,
+                      }
+                  },
+              }
+
+          if not platforms:
+              raise SystemExit("no updatable platform bundles were produced")
+
+          feed = {
+              "channel": "stable",
+              "releaseVersion": os.environ["VERSION"],
+              "platforms": platforms,
+          }
+          out = pathlib.Path("dist/metadata.json")
+          out.write_text(json.dumps(feed, indent=2) + "\n")
+          print(out.read_text())
+          PY
 
       - name: Republish main-build release
         env:

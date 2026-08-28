@@ -11,6 +11,9 @@ function makeRoot(): string {
   return mkdtempSync(join(tmpdir(), "od-updater-config-test-"));
 }
 
+const FORK_METADATA_URL =
+  "https://github.com/SMB-Team-Technology/aiwp-design/releases/download/main-build/metadata.json";
+
 describe("desktop updater config", () => {
   it("defaults counted beta internal builds to the beta update channel", () => {
     const root = makeRoot();
@@ -25,7 +28,9 @@ describe("desktop updater config", () => {
       });
 
       expect(config.channel).toBe(DESKTOP_UPDATE_CHANNELS.BETA);
-      expect(config.metadataUrl).toContain("/beta/latest/metadata.json");
+      // This fork serves one rolling feed for every channel; the channel is
+      // validated against the feed body, not encoded in its URL.
+      expect(config.metadataUrl).toBe(FORK_METADATA_URL);
     } finally {
       rmSync(root, { force: true, recursive: true });
     }
@@ -63,7 +68,9 @@ describe("desktop updater config", () => {
       });
 
       expect(config.channel).toBe(DESKTOP_UPDATE_CHANNELS.PRERELEASE);
-      expect(config.metadataUrl).toContain("/prerelease/latest/metadata.json");
+      // This fork serves one rolling feed for every channel; the channel is
+      // validated against the feed body, not encoded in its URL.
+      expect(config.metadataUrl).toBe(FORK_METADATA_URL);
     } finally {
       rmSync(root, { force: true, recursive: true });
     }
@@ -82,7 +89,9 @@ describe("desktop updater config", () => {
       });
 
       expect(config.channel).toBe("preview");
-      expect(config.metadataUrl).toContain("/preview/latest/metadata.json");
+      // This fork serves one rolling feed for every channel; the channel is
+      // validated against the feed body, not encoded in its URL.
+      expect(config.metadataUrl).toBe(FORK_METADATA_URL);
     } finally {
       rmSync(root, { force: true, recursive: true });
     }

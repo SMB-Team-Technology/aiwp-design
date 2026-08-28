@@ -38,7 +38,13 @@ export const DESKTOP_UPDATE_ENV = Object.freeze({
   PLATFORM: "OD_UPDATE_PLATFORM",
 } as const);
 
-const DEFAULT_RELEASE_ORIGIN = "https://releases.open-design.ai";
+// This fork publishes its bundles as assets on one rolling GitHub prerelease
+// rather than to a channel-partitioned release bucket, so the feed is a single
+// fixed URL instead of `<origin>/<channel>/latest/metadata.json`. Leaving the
+// upstream origin here would have every install polling a third party that
+// serves a different product — and offering its builds as updates to ours.
+const DEFAULT_METADATA_URL =
+  "https://github.com/SMB-Team-Technology/aiwp-design/releases/download/main-build/metadata.json";
 const BETA_POLL_INTERVAL_MS = 15 * 60 * 1000;
 const STABLE_POLL_INTERVAL_MS = 6 * 60 * 60 * 1000;
 const DEFAULT_POLL_INITIAL_DELAY_MS = 5000;
@@ -115,7 +121,10 @@ export function isDesktopUpdateChannel(value: unknown): value is DesktopUpdateCh
 }
 
 function defaultMetadataUrl(channel: DesktopUpdateChannel): string {
-  return `${DEFAULT_RELEASE_ORIGIN}/${channel}/latest/metadata.json`;
+  // The channel is still validated against the feed's own `channel` field by
+  // `metadataChannel`; it just no longer selects the URL.
+  void channel;
+  return DEFAULT_METADATA_URL;
 }
 
 export function normalizeDownloadRoot(value: string): string {
