@@ -40,22 +40,23 @@ jobs:
             runner: macos-latest
             platform: mac
             format: dmg
-            # Globbed rather than hardcoded: the namespace segment is derived
-            # from the app version, so it changes the moment a channel suffix
-            # is added to package.json.
-            glob: .tmp/tools-pack/out/mac/namespaces/*/dmg/*.dmg
+            # Matched by name under the platform's output root rather than by
+            # a fixed path: the namespace segment is derived from the app
+            # version and moves the moment a channel suffix reaches
+            # package.json.
+            artifact: '*.dmg'
             asset: AIWP-Design-macos-arm64.dmg
           - label: Windows (x64)
             runner: windows-latest
             platform: win
             format: nsis
-            glob: .tmp/tools-pack/out/win/namespaces/*/builder/*-setup.exe
+            artifact: '*-setup.exe'
             asset: AIWP-Design-windows-x64.exe
           - label: Linux (x86_64)
             runner: ubuntu-latest
             platform: linux
             format: appimage
-            glob: .tmp/tools-pack/out/linux/namespaces/**/*.AppImage
+            artifact: '*.AppImage'
             asset: AIWP-Design-linux-x86_64.AppImage
 
     steps:
@@ -68,6 +69,17 @@ jobs:
       - name: Install pnpm
         shell: bash
         run: npm install -g pnpm@10.33.2
+
+      # tools-pack builds the Windows installer with its own NSIS script and
+      # shells out to makensis directly, so it needs a real NSIS install — it
+      # never triggers the electron-builder download that would otherwise
+      # populate the cache it also looks in. Chocolatey installs to
+      # "C:\\Program Files (x86)\\NSIS", one of the paths resolveMakensisCommand
+      # probes.
+      - name: Install NSIS
+        if: ${{ matrix.platform == 'win' }}
+        shell: pwsh
+        run: choco install nsis --no-progress -y
 
       - name: Set up Node
         uses: actions/setup-node@v4
@@ -90,20 +102,22 @@ jobs:
 
       # Bundle filenames carry the namespace token, so normalize to a stable
       # asset name before upload — the release URLs must not move between runs.
+      # find(1), not a shell glob: macOS runners are still bash 3.2, which has
+      # no `globstar`, and `shopt -s globstar` is a hard error there.
       - name: Collect artifact
         shell: bash
         run: |
           set -euo pipefail
-          shopt -s globstar nullglob
-          matches=(${{ matrix.glob }})
-          if [ ${#matches[@]} -eq 0 ]; then
-            echo "No bundle matched ${{ matrix.glob }}" >&2
-            echo "Tree under .tmp/tools-pack/out:" >&2
-            find .tmp/tools-pack/out -maxdepth 6 -type f >&2 || true
+          root=".tmp/tools-pack/out/${{ matrix.platform }}"
+          match="$(find "$root" -type f -name '${{ matrix.artifact }}' -print 2>/dev/null | head -n 1 || true)"
+          if [ -z "$match" ]; then
+            echo "No bundle matching '${{ matrix.artifact }}' under $root" >&2
+            echo "Files present:" >&2
+            find "$root" -maxdepth 6 -type f >&2 || true
             exit 1
           fi
           mkdir -p dist
-          cp "${matches[0]}" "dist/${{ matrix.asset }}"
+          cp "$match" "dist/${{ matrix.asset }}"
           ls -lh dist
 
       - name: Upload artifact
